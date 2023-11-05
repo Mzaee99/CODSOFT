@@ -1,0 +1,121 @@
+# Import necessary libraries
+from surprise import Dataset, Reader, KNNBasic
+import pandas as pd
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+
+# Define user preferences for movies and books
+user_movie_preferences = {'Marvel': 4, 'Extraction': 5, 'Expendables': 3, 'Golda': 2, 'Cars': 1}
+user_book_preferences = ['IT Book 1', 'IT Book 2', 'Cybersecurity', 'Networking', 'Python']
+
+# Load movie ratings dataset
+movie_ratings = pd.read_csv('movie_ratings.csv')
+
+# Define the reader object
+movie_reader = Reader(rating_scale=(1, 5))
+
+# Load the movie dataset using the reader object
+movie_data = Dataset.load_from_df(movie_ratings[['userId', 'movieId', 'rating']], movie_reader)
+
+# Build the movie training set
+movie_trainset = movie_data.build_full_trainset()
+
+# Define the similarity measure for movies
+movie_sim_options = {'name': 'cosine', 'user_based': False}
+
+# Build the KNN model for movies
+movie_model = KNNBasic(sim_options=movie_sim_options)
+
+# Train the movie model
+movie_model.fit(movie_trainset)
+
+# Get the list of all movie IDs
+movie_ids = movie_ratings['movieId'].unique()
+
+# Get the list of all movie titles
+movie_titles = movie_ratings['title'].unique()
+
+# Create a dictionary to map movie titles to movie IDs
+title_to_id = {}
+for i in range(len(movie_titles)):
+    title_to_id[movie_titles[i]] = movie_ids[i]
+
+# Get the list of movie IDs for the user's preferred movies
+movie_id_list = []
+for movie_title in user_movie_preferences.keys():
+    movie_id_list.append(title_to_id[movie_title])
+
+# Get the list of similar movies
+similar_movies = []
+for movie_id in movie_id_list:
+    similar_movies.extend(movie_model.get_neighbors(movie_id, k=10))
+
+# Remove duplicates from the list of similar movies
+similar_movies = list(set(similar_movies))
+
+# Get the list of recommended movies
+recommended_movies = []
+for movie_id in similar_movies:
+    title = movie_ratings[movie_ratings['movieId'] == movie_id]['title'].values[0]
+    if title not in user_movie_preferences.keys():
+        recommended_movies.append(title)
+
+# Print the list of recommended movies
+print("Recommended movies:")
+print(recommended_movies)
+
+# Load book ratings dataset
+book_ratings = pd.read_csv('book_ratings.csv')
+
+# Load book titles dataset
+books = pd.read_csv('books.csv')
+
+# Merge book ratings and titles datasets
+merged = pd.merge(book_ratings, books, on='book_id')
+
+# Group the merged dataset by book title and calculate the mean rating
+grouped = merged.groupby('title')['rating'].mean().reset_index()
+
+# Create a new column in the grouped dataset that contains the book summary
+grouped['summary'] = books['summary']
+
+# Define the TF-IDF vectorizer object for books
+tfidf = TfidfVectorizer(stop_words='english')
+
+# Fit and transform the summary column using the TF-IDF vectorizer object for books
+tfidf_matrix = tfidf.fit_transform(grouped['summary'])
+
+# Calculate the cosine similarity matrix for books
+cosine_sim = cosine_similarity(tfidf_matrix, tfidf_matrix)
+
+# Get the list of all book titles
+book_titles = grouped['title'].unique()
+
+# Create a dictionary to map book titles to book indices
+title_to_index = {}
+for i in range(len(book_titles)):
+    title_to_index[book_titles[i]] = i
+
+# Get the list of book indices for the user's preferred books
+book_index_list = []
+for book_title in user_book_preferences:
+    book_index_list.append(title_to_index[book_title])
+
+# Get the list of similar books
+similar_books = []
+for book_index in book_index_list:
+    similar_books.extend(cosine_sim[book_index].argsort()[:-11:-1])
+
+# Remove duplicates from the list of similar books
+similar_books = list(set(similar_books))
+
+# Get the list of recommended books
+recommended_books = []
+for book_index in similar_books:
+    title = grouped.iloc[book_index]['title']
+    if title not in user_book_preferences:
+        recommended_books.append(title)
+
+# Print the list of recommended books
+print("Recommended books:")
+print(recommended_books)

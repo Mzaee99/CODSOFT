@@ -1,0 +1,106 @@
+import random
+
+# Tic-Tac-Toe board
+board = [' ' for _ in range(9)]
+
+# Winning combinations
+winning_combinations = [
+    (0, 1, 2), (3, 4, 5), (6, 7, 8),  # Rows
+    (0, 3, 6), (1, 4, 7), (2, 5, 8),  # Columns
+    (0, 4, 8), (2, 4, 6)              # Diagonals
+]
+
+# Function to print the board
+def print_board():
+    for i in range(0, 9, 3):
+        print(board[i], '|', board[i + 1], '|', board[i + 2])
+    print()
+
+# Function to check if a player has won
+def is_winner(player):
+    for combination in winning_combinations:
+        if board[combination[0]] == board[combination[1]] == board[combination[2]] == player:
+            return True
+    return False
+
+# Function to check if the board is full
+def is_board_full():
+    return ' ' not in board
+
+# Function for the AI player to make a move
+def ai_move():
+    best_score = float('-inf')
+    best_move = None
+
+    for i in range(9):
+        if board[i] == ' ':
+            board[i] = 'O'
+            score = minimax(board, 0, False)
+            board[i] = ' '
+
+            if score > best_score:
+                best_score = score
+                best_move = i
+
+    board[best_move] = 'O'
+
+# Minimax algorithm with Alpha-Beta Pruning
+def minimax(board, depth, is_maximizing):
+    if is_winner('O'):
+        return 1
+    elif is_winner('X'):
+        return -1
+    elif is_board_full():
+        return 0
+
+    if is_maximizing:
+        best_score = float('-inf')
+        for i in range(9):
+            if board[i] == ' ':
+                board[i] = 'O'
+                score = minimax(board, depth + 1, False)
+                board[i] = ' '
+                best_score = max(score, best_score)
+        return best_score
+    else:
+        best_score = float('inf')
+        for i in range(9):
+            if board[i] == ' ':
+                board[i] = 'X'
+                score = minimax(board, depth + 1, True)
+                board[i] = ' '
+                best_score = min(score, best_score)
+        return best_score
+
+# Main game loop
+def play_game():
+    print('Welcome to Tic-Tac-Toe!')
+    print_board()
+
+    while True:
+        if is_board_full():
+            print('It\'s a tie!')
+            break
+
+        player_move = int(input('Enter your move (0-8): '))
+        if board[player_move] != ' ':
+            print('Invalid move. Try again.')
+            continue
+
+        board[player_move] = 'X'
+        print_board()
+
+        if is_winner('X'):
+            print('You win!')
+            break
+
+        ai_move()
+        print('AI\'s move:')
+        print_board()
+
+        if is_winner('O'):
+            print('AI wins!')
+            break
+
+# Start the game2
+play_game()

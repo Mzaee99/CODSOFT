@@ -1,0 +1,55 @@
+# Define the chatbot's rules and responses
+rules = {
+    "hello": "Hello! How can I help you?",
+    "how are you": "I'm just a chatbot, but I'm here to assist you. What can I do for you?",
+    "goodbye": "Goodbye! Have a great day!",
+    "name": "I am a chatbot. You can call me ChatGPT.",
+    "default_response": "I'm not sure how to respond to that. Can you please rephrase your question?"
+}
+
+# Main chat loop
+while True:
+    user_input = input("You: ").lower()  # Get user input and convert it to lowercase
+    response = rules.get(user_input, rules["default_response"])  # Check if user input matches any rule
+
+    print("Chatbot:", response)  # Display the chatbot's response
+
+HERE'S HOW THE CHATBOT WOULD WORK:
+You: Hello
+Chatbot: Hello! How can I help you?
+
+You: How are you?
+Chatbot: I'm just a chatbot, but I'm here to assist you. What can I do for you?
+
+You: What's your name?
+Chatbot: I am a chatbot. You can call me ChatGPT.
+
+You: What's the weather like today?
+Chatbot: I'm not sure how to respond to that. Can you please rephrase your question?
+
+You: Goodbye
+Chatbot: Goodbye! Have a great day!
+
+**EXAMPLE 2 (PA)**
+
+# Define the rules and responses
+rules = {
+    'hi': 'Hello!',
+    'how are you': 'I am good, thank you!',
+    'bye': 'Goodbye!'
+}
+
+# Function to get the response based on user input
+def get_response(user_input):
+    for rule, response in rules.items():
+        if rule in user_input:
+            return response
+    return "I'm sorry, I don't understand."
+
+# Main loop to interact with the chatbot
+while True:
+    user_input = input("User: ")
+    if user_input.lower() == 'exit':
+        break
+    response = get_response(user_input.lower())
+    print("Chatbot:", response)
